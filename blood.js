@@ -107,10 +107,10 @@
 
      /**
       * Reads a Blood Bag's information from the ledger
-      * @param {*} stub Chaincode code executor
-      * @param {*} args Bag Arguments such as bloodId
-      * @param {*} thisClass References to this class
-      * @returns {Object} Function Execution Success Flag
+      * @param {Object} stub Chaincode code executor
+      * @param {Object} args Bag Arguments such as bloodId
+      * @param {Object} thisClass References to this class
+      * @returns {Object} Blood Bag data
       */
      async readBloodBag(stub,args,thisClass){
          // Input Sanitation
@@ -131,5 +131,49 @@
          }
          console.info('[BLOOD BAG RETRIEVED] ~ '+bloodBagAsBytes.toString()+' ~ [BLOOD BAG RETRIEVED]')
          return bloodBagAsBytes
+     }
+
+     /**
+      * Delete's a Blood Bag's record from the ledger
+      * @param {Object} stub Chaincode code executor
+      * @param {Object} args Bag Arguments such as bloodId
+      * @param {Object} thisClass References to this class
+      * @returns {Object} Function Execution Success Flag
+      */
+     async deleteBloodBag(stub,args,thisClass){
+        //Input Sanity Check
+        if(args.length != 1){
+            throw new Error('Incorrect number of arguments. Expecting ID of the Blood Bag to delete')
+        }
+        // Get the Blood Bag ID
+        let ID = args[0]
+        if (!ID) {
+            throw new Error('Blood Bag ID must not be empty')
+        }
+        // To maintain the Index consistency, we need to read the bag first and get it's type.
+        let bagAsBytes = await stub.getState(ID)
+        let jsonResp = {}
+        if (!bagAsBytes) {
+            jsonResp.Error = 'Blood Bag ['+ID+'] does not exist'
+            throw new Error(JSON.stringify(jsonResp))
+        }
+        let bagJSON = {}
+        try {
+            bagJSON = JSON.parse(bagAsBytes.toString())
+        }catch(err) {
+            jsonResp.error = 'Failed to decode JSON of: '+ID
+            throw new Error(jsonResp)
+        }
+
+        await stub.deleteState(ID)
+
+        //Delete the index
+        let indexName = 'type~id'
+        let typeIdIndexKey = stub.createCompositeKey(indexName,[bagJSON.type,bagJSON.id])
+        if (!typeIdIndexKey){
+            throw new Error('Failed to create the composite key')
+        }
+        // Delete index entry to state
+        await stub.deleteState(typeIdIndexKey)
      }
  }
