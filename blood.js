@@ -213,8 +213,13 @@
         }
 
         //Change it's data
-        bagToMove.location = location
-        bagToMove.status = 'INTRANSIT'
+        if(bagToMove.destination == location) {
+            bagToMove.location = location
+            bagToMove.status = 'RECEIVED'
+        } else {
+            bagToMove.location = location
+            bagToMove.status = 'INTRANSIT'
+        }
 
         //Rewrite it to the ledger
         let bagJSONasBytes = Buffer.from(JSON.stringify(bagToMove))
