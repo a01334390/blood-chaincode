@@ -11,7 +11,8 @@
  let chaincode = class {
      /**
       * Chaincode Instantiation Process
-      * @param {Any} stub : Instantiation Parameters 
+      * @param {Object} stub Instantiation Parameters
+      * @returns {Boolean} Function Execution Success Flag
       */
      async Init(stub) {
          let ret = stub.getFunctionAndParameters()
@@ -23,7 +24,8 @@
 
      /**
       * Chaincode Invocation Function
-      * @param {*} stub : Invocation Parameters
+      * @param {Object} stub Invocation Parameters
+      * @returns {Boolean} Function Execution Success Flag
       */
      async Invoke(stub) {
          console.info('Transaction ID:',stub.getTxID())
@@ -43,12 +45,13 @@
             return shim.error(err)
         }
      }
-     
+
      /**
-      * Creates a new Blood Bag on the system
-      * @param {*} stub : Chaincode code executor
-      * @param {*} args : Bag Arguments such as bloodId
-      * @param {*} thisClass : References to this class
+      * Creates a new Blood Bag on the ledger
+      * @param {Object} stub Chaincode code executor
+      * @param {Object} args Bag Arguments such as bloodId, bloodLocation, bloodType, and BloodSize
+      * @param {Object} thisClass References to this class
+      * @returns {Boolean} Function Execution Success Flag
       */
      async createBloodBag(stub,args,thisClass){
         // Input Sanitation
@@ -73,11 +76,13 @@
         if(typeof bloodBagQuantity !== 'number') {
             throw new Error('4th argument must be a numeric string')
         }
+
         // Check if blood bag already exists
         let bloodBagState = await stub.getState(bloodBagID)
         if (bloodBagState.toString()) {
             throw new Error('Blood Bag: '+bloodBagID+' already exists.')
         }
+
         //Create Blood Bag object and marshal to JSON
         let bloodBag = {}
         bloodBag.docType = 'bloodbag'
@@ -98,5 +103,33 @@
         await stub.putState(typeIdIndexKey,Buffer.from('\u0000'))
         // Blood Bag Saved and Indexed. Transaction success
         console.info(' --- end createBloodBag --- ')
+     }
+
+     /**
+      * Reads a Blood Bag's information from the ledger
+      * @param {*} stub Chaincode code executor
+      * @param {*} args Bag Arguments such as bloodId
+      * @param {*} thisClass References to this class
+      * @returns {Object} Function Execution Success Flag
+      */
+     async readBloodBag(stub,args,thisClass){
+         // Input Sanitation
+         if(args.length != 1){
+             throw new Error('Incorrect number of arguments. Expecting ID of Blood Bag to query')
+         }
+         // Start query
+         let ID = args[0]
+         if (!ID) {
+             throw new Error('Blood Bag ID must not be empty')
+         }
+         //Query the ledger
+         let bloodBagAsBytes = await stub.getState(ID)
+         if (!bloodBagAsBytes.toString()){
+             let jsonResp = {}
+             jsonResp.Error = 'Blood Bag ['+ID+'] does not exist'
+             throw new Error(JSON.stringify(jsonResp))
+         }
+         console.info('[BLOOD BAG RETRIEVED] ~ '+bloodBagAsBytes.toString()+' ~ [BLOOD BAG RETRIEVED]')
+         return bloodBagAsBytes
      }
  }
