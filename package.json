@@ -1,0 +1,24 @@
+{
+  "name": "blood-chaincode",
+  "version": "0.0.1",
+  "description": "Blood Donor Application using Hyperledger Fabric",
+  "main": "blood.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a01334390/blood-chaincode.git"
+  },
+  "keywords": [
+    "fabric",
+    "chaincode",
+    "blood"
+  ],
+  "author": "Fernando Martin Garcia Del Angel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/a01334390/blood-chaincode/issues"
+  },
+  "homepage": "https://github.com/a01334390/blood-chaincode#readme"
+}
