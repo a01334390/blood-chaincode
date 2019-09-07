@@ -6,6 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "fabric-shim": "^1.4.2"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/a01334390/blood-chaincode.git"

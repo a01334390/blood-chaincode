@@ -8,7 +8,7 @@
  const shim = require('fabric-shim')
  const util = require('util')
 
- let chaincode = class {
+ let Chaincode = class {
      /**
       * Chaincode Instantiation Process
       * @param {Object} stub Instantiation Parameters
@@ -270,4 +270,71 @@
        await stub.putState(ID,bagJSONasBytes)
        console.info(' --- end assignBloodBagReceiver --- ')
     }
+
+    /**
+     * Iterates over all historic data from a Blood Bag
+     * @param {Iterator} iterator Results Iterator
+     * @param {Object} isHistory Checks if it's part of history
+     * @returns {Object} Blood bag history
+     */
+    async getAllResults(iterator,isHistory) {
+        let allResults = []
+        while(true){
+            let res = await iterator.next()
+            if(res.value && res.value.value.toString()){
+                let jsonRes = {}
+                console.log(res.value.value.toString('utf8'))
+                if(isHistory && isHistory === true){
+                    jsonRes.TxId = res.value.tx_id
+                    jsonRes.Timestamp = res.value.timestamp
+                    jsonRes.IsDelete = res.value.is_delete.toString()
+                    try {
+                        jsonRes.Value = JSON.parse(res.value.value.toString('utf8'))
+                    } catch(err){
+                        console.error(err)
+                        jsonRes.Value = res.value.value.toString('utf8')
+                    }
+                } else {
+                    jsonRes.Key = res.value.key
+                    try {
+                        jsonRes.Record = JSON.parse(res.value.value.toString('utf8'))
+                    } catch(err){
+                        console.error(err)
+                        jsonRes.Value = res.value.value.toString('utf8')
+                    }
+                }
+                allResults.push(jsonRes)
+            }
+
+            if(res.done){
+                console.log('end of data')
+                await iterator.close()
+                return allResults
+            }
+        }
+    }
+
+    /**
+     * Gets the historic data from a bag of blood
+     * @param {Object} stub Chaincode code executor
+      * @param {Object} args Bag Arguments such as bloodId, recipient and Destination
+      * @param {Object} thisClass References to this class
+      * @returns {Object} Blood Bag
+     */
+    async getHistoryForBloodBag(stub,args,thisClass){
+        //Input Sanitation
+        if (args.length < 1) {
+            throw new Error('Incorrect number of arguments. Expecting BloodID')
+        }
+        // Get the Bloodbag
+        let ID = args[0]
+        console.info(' --- start getHistoryForBloodBag ---')
+        //Extract the history from stub iterator
+        let resultsIterator = await stub.getHistoryForKey(ID)
+        let method = thisClass['getAllResults']
+        let results = await method(resultsIterator,true)
+        return Buffer.from(JSON.stringify(results))
+    }
  }
+
+ shim.start(new Chaincode())
