@@ -4,11 +4,12 @@
   "description": "Blood Donor Application using Hyperledger Fabric",
   "main": "blood.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start":"node blood.js"
   },
   "dependencies": {
-    "fabric-shim": "^1.4.2"
-  },
+		"fabric-shim": "~1.4.0"
+	},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/a01334390/blood-chaincode.git"
